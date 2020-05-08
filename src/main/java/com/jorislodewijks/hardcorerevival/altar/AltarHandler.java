@@ -3,6 +3,7 @@ package com.jorislodewijks.hardcorerevival.altar;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
@@ -12,7 +13,6 @@ import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.CauldronLevelChangeEvent;
 
-import com.jorislodewijks.hardcorerevival.HardcoreRevival;
 import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
 import com.jorislodewijks.hardcorerevival.karma.KarmaHandler;
 
@@ -26,13 +26,18 @@ public class AltarHandler implements Listener {
 	@EventHandler
 	public void BlockPlaceEvent​(BlockPlaceEvent event) {
 		if (Altar.CultMaterials.contains(event.getBlock().getType())) {
-			if (Altar.checkBlocksForCultAltarValidity(Altar.getCultAltarBlocks(event.getBlock()))) {
-				registerNewAltar(event.getPlayer(), Altar.getCultAltarBlocks(event.getBlock()),
+			List<Block> altarBlocks = Altar.getCultAltarBlocks(event.getBlock());
+			if (Altar.checkBlocksForCultAltarValidity(altarBlocks)) {
+				registerNewAltar(event.getPlayer(), altarBlocks,
 						ResurrectionType.CULT);
 			}
 		}
 		if (Altar.ReligiousMaterials.contains(event.getBlock().getType())) {
-			// CheckBlocksForAltarValidity(event.getBlock());
+			List<Block> altarBlocks = Altar.getReligiousAltarBlocks(event.getBlock());
+			if(Altar.checkBlocksForReligiousAltarValidity(altarBlocks)) {
+				registerNewAltar(event.getPlayer(), altarBlocks,
+						ResurrectionType.RELIGIOUS);
+			}
 		}
 	}
 
@@ -72,6 +77,31 @@ public class AltarHandler implements Listener {
 			}
 		}
 	}
+	
+	@EventHandler
+	public void OnAltarCreatedEvent(OnAltarCreatedEvent event) {
+		Altar altar = event.getAltar();
+		switch(altar.getAltarType()) {
+		case CULT:
+			altar.getImportantBlock().getWorld().playSound(altar.getImportantBlock().getLocation(), Sound.AMBIENT_CAVE, 1.0f, 0.8f);
+			break;
+		case RELIGIOUS:
+			altar.getImportantBlock().getWorld().playSound(altar.getImportantBlock().getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 2.0f);
+			break;
+		}
+	}
+	
+	@EventHandler
+	public void OnAltarRemovalEvent(OnAltarRemovalEvent event) {
+		switch(event.getAltar().getAltarType()) {
+		case CULT:
+			event.getLocation().getWorld().playSound(event.getLocation(), Sound.BLOCK_PORTAL_AMBIENT, 1.0f, 0.5f);
+			break;
+		case RELIGIOUS:
+			event.getLocation().getWorld().playSound(event.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 1.0f);
+			break;
+		}
+	}
 
 	public Altar getAltarFromBlock(Block block) {
 		for (Altar altar : altars) {
@@ -86,15 +116,25 @@ public class AltarHandler implements Listener {
 	public static Altar registerNewAltar(Player creator, List<Block> blocks,
 			ResurrectionType type) {
 		Altar altar;
-		altar = new Altar(creator.getUniqueId(), type, blocks);
+		altar = new Altar(creator, type, blocks);
 		altars.add(altar);
-		if (creator != null)
-			new KarmaHandler().modPlayerKarma(creator, -50);
+		
+		switch(type) {
+		case CULT:
+			if (creator != null)
+				new KarmaHandler().modPlayerKarma(creator, -50);
+			break;
+		case RELIGIOUS:
+			if (creator != null)
+				new KarmaHandler().modPlayerKarma(creator, 50);
+			break;
+		}
+			
 		return altar;
 	}
 
 	public static void removeAltar(Altar altar) {
-		altar.stopTasks();
+		altar.remove();
 		altars.remove(altar);
 	}
 

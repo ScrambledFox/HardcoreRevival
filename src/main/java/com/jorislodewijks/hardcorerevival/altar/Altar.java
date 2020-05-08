@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -13,14 +14,13 @@ import org.bukkit.block.data.Levelled;
 import org.bukkit.block.data.Lightable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
 
 import com.jorislodewijks.hardcorerevival.HardcoreRevival;
 import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
-import com.jorislodewijks.hardcorerevival.RevivalHandler;
-import com.jorislodewijks.hardcorerevival.books.CultBookHandler;
 import com.jorislodewijks.hardcorerevival.ritual.Ritual;
 import com.jorislodewijks.hardcorerevival.ritual.RitualDetectionTask;
 import com.jorislodewijks.hardcorerevival.ritual.RitualRunnerTask;
@@ -29,26 +29,13 @@ public class Altar {
 	public static List<Material> CultMaterials = new ArrayList<Material>(
 			Arrays.asList(Material.CAULDRON, Material.FIRE, Material.CAMPFIRE));
 	public static List<Material> ReligiousMaterials = new ArrayList<Material>(
-			Arrays.asList(Material.DIAMOND_BLOCK, Material.EMERALD_BLOCK));
-
-	private static List<Ritual> CultRituals = new ArrayList<Ritual>(Arrays.asList(
-			new Ritual("Ritual Instruction Spawning",
-					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.BOOK, 1),
-							new ItemStack(Material.FEATHER, 1), new ItemStack(Material.INK_SAC, 1))),
-					new ArrayList<ItemStack>(Arrays.asList(new CultBookHandler().getInstructionBook())), 10, false,
-					-100, -50, -1),
-			new Ritual("Bodily Sacrificial Revival",
-					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.TOTEM_OF_UNDYING, 1))), null, 10,
-					false, -100, -50, -1)));
-
-	private static List<Ritual> ReligiousRituals = new ArrayList<Ritual>(
-			Arrays.asList(new Ritual("Bodily Sacrificial Revival",
-					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.TOTEM_OF_UNDYING, 1))), null, 10,
-					false, -100, -50, -1)));
+			Arrays.asList(Material.ENCHANTING_TABLE, Material.EMERALD_BLOCK, Material.WHITE_STAINED_GLASS));
 
 	private ResurrectionType altarType;
 	private List<Block> blocks;
 	private UUID creatorUUID;
+
+	private Location importantBlockLocation;
 
 	private Ritual activeRitual;
 
@@ -57,17 +44,25 @@ public class Altar {
 	private BukkitTask ritualDetectionTask;
 	private BukkitTask ritualRunnerTask;
 
-	public Altar(UUID creatorUUID, ResurrectionType altarType, List<Block> blocks) {
-		this.creatorUUID = creatorUUID;
+	public Altar(Player creator, ResurrectionType altarType, List<Block> blocks) {
+		this.creatorUUID = creator.getUniqueId();
 		this.altarType = altarType;
 		this.blocks = blocks;
+
+		importantBlockLocation = this.getImportantBlock().getLocation();
+
+		OnAltarCreatedEvent event = new OnAltarCreatedEvent(this, creator);
+		Bukkit.getServer().getPluginManager().callEvent(event);
 
 		particleTask = new AltarParticleEffectsTask(this).runTaskTimer(HardcoreRevival.instance, 0, 2);
 		validityTask = new AltarValidityTask(this).runTaskTimer(HardcoreRevival.instance, 20, 20);
 		ritualDetectionTask = new RitualDetectionTask(this).runTaskTimer(HardcoreRevival.instance, 0, 20/* * 10 */);
 	}
 
-	public void stopTasks() {
+	public void remove() {
+		OnAltarRemovalEvent event = new OnAltarRemovalEvent(this, importantBlockLocation);
+		Bukkit.getServer().getPluginManager().callEvent(event);
+
 		if (particleTask != null)
 			particleTask.cancel();
 		if (validityTask != null)
@@ -89,7 +84,7 @@ public class Altar {
 			break;
 		case RELIGIOUS:
 			for (Block block : blocks) {
-				if (block.getType() == ReligiousMaterials.get(0)) {
+				if (block.getType() == ReligiousMaterials.get(1)) {
 					return block;
 				}
 			}
@@ -107,24 +102,13 @@ public class Altar {
 		return this.altarType;
 	}
 
-	public List<Ritual> getRituals(ResurrectionType type) {
-		switch (type) {
-		case CULT:
-			return CultRituals;
-		case RELIGIOUS:
-			return ReligiousRituals;
-		}
-
-		return null;
-	}
-
 	public Ritual getActiveRitual() {
 		return this.activeRitual;
 	}
 
 	public void setActiveRitual(Ritual ritual) {
 		if (this.hasActiveRitual())
-			this.cancelRitual();
+			this.removeActiveRitual();
 
 		this.activeRitual = ritual;
 		ritualRunnerTask = new RitualRunnerTask(this, ritual).runTaskTimer(HardcoreRevival.instance, 0, 20);
@@ -134,17 +118,9 @@ public class Altar {
 		return this.activeRitual != null ? true : false;
 	}
 
-	public void cancelRitual() {
+	public void removeActiveRitual() {
 		ritualRunnerTask.cancel();
 		this.activeRitual = null;
-	}
-
-	public void completeRitual() {
-		ritualRunnerTask.cancel();
-		this.activeRitual = null;
-
-		new RevivalHandler().reviveNearestDeadPlayer(this.getImportantBlock().getLocation().add(0.5, 0.5, 0.5),
-				this.getImportantBlock().getLocation().add(0.5, 0.5, 0.5), this.altarType);
 	}
 
 	public List<ItemStack> getAltarInventory() {
@@ -197,7 +173,32 @@ public class Altar {
 	}
 
 	public static List<Block> getReligiousAltarBlocks(Block block) {
-		return null;
+		List<Block> blocks = new ArrayList<Block>();
+		if (block.getType() == Material.ENCHANTING_TABLE) {
+			blocks.add(block);
+
+			Block middleBlock = null;
+			if (block.getRelative(BlockFace.SOUTH, 2).getType() == Material.EMERALD_BLOCK) {
+				middleBlock = block.getRelative(BlockFace.SOUTH, 2);
+			} else if (block.getRelative(BlockFace.EAST, 2).getType() == Material.EMERALD_BLOCK) {
+				middleBlock = block.getRelative(BlockFace.EAST, 2);
+			} else if (block.getRelative(BlockFace.NORTH, 2).getType() == Material.EMERALD_BLOCK) {
+				middleBlock = block.getRelative(BlockFace.NORTH, 2);
+			} else if (block.getRelative(BlockFace.WEST, 2).getType() == Material.EMERALD_BLOCK) {
+				middleBlock = block.getRelative(BlockFace.WEST, 2);
+			}
+
+			if (middleBlock != null) {
+
+				for (int x = 0; x < 3; x++) {
+					for (int z = 0; z < 3; z++) {
+						blocks.add(middleBlock.getRelative(x - 1, 0, z - 1));
+					}
+				}
+			}
+		}
+
+		return blocks;
 	}
 
 	public static boolean checkBlocksForCultAltarValidity(List<Block> blocks) {
@@ -236,7 +237,30 @@ public class Altar {
 	}
 
 	public static boolean checkBlocksForReligiousAltarValidity(List<Block> blocks) {
-		return false;
+		Block middleBlock = null;
+		Block enchantingTable = null;
+
+		for (Block block : blocks) {
+			if (block.getType() == Material.EMERALD_BLOCK)
+				middleBlock = block;
+			if (block.getType() == Material.ENCHANTING_TABLE)
+				enchantingTable = block;
+		}
+
+		if (middleBlock == null)
+			return false;
+
+		for (int x = 0; x < 3; x++) {
+			for (int z = 0; z < 3; z++) {
+				if (middleBlock.getRelative(x - 1, 0, z - 1).getType() != Material.WHITE_STAINED_GLASS) {
+					if (x == 1 && z == 1)
+						continue;
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 
 }

@@ -1,10 +1,6 @@
 package com.jorislodewijks.hardcorerevival.ritual;
 
-import java.util.List;
-
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import com.jorislodewijks.hardcorerevival.HardcoreRevival;
@@ -32,38 +28,17 @@ public class RitualRunnerTask extends BukkitRunnable {
 		if (currentTimer < ritual.getRitualTime()) {
 			currentTimer++;
 		} else {
-			// Ritual complete.
-
 			this.complete();
-
-			HardcoreRevival.instance.getLogger().info(ritual.getName() + " has been completed.");
 		}
 	}
 
 	private void complete() {
-		// See how we can do other code execution?
-
-		this.removeIngredients(this.ritual.getIngredients());
-		this.spawnResults(this.ritual.getResults());
-		altar.completeRitual();
+		OnRitualCompletionEvent event = new OnRitualCompletionEvent(this.altar, this.ritual);
+		Bukkit.getServer().getPluginManager().callEvent(event);
 	}
 
-	private void removeIngredients(List<ItemStack> items) {
-		for (Entity e : this.altar.getAlterItemEntities()) {
-			if (e instanceof Item) {
-				// if(((Item)e).getItemStack())
-
-				// Remove all for now. We may do additive removal..
-				e.remove();
-			}
-		}
-	}
-
-	private void spawnResults(List<ItemStack> items) {
-		for (ItemStack itemStack : items) {
-			this.altar.getImportantBlock().getWorld()
-					.dropItemNaturally(this.altar.getImportantBlock().getLocation().add(0.5, 0.5, 0.5), itemStack);
-		}
+	public float getProgress() {
+		return (currentTimer / (float) ritual.getRitualTime());
 	}
 
 }

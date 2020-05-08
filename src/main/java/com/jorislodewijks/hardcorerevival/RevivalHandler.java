@@ -14,6 +14,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
+import com.jorislodewijks.hardcorerevival.karma.KarmaHandler;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -31,9 +32,9 @@ public class RevivalHandler implements Listener {
 			
 			switch(ressurectionType) {
 			case CULT:
-				player.addPotionEffect(new PotionEffect(PotionEffectType.UNLUCK, 168000, 1, true));
+				player.addPotionEffect(new PotionEffect(PotionEffectType.UNLUCK, 20 * 60 * 20 * 7, 1, true));
 				player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 200, 5));
-				player.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 20 * 5, 1));
+				player.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 20 * 10, 10));
 				
 				player.getWorld().spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), 500);
 				player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), 200);
@@ -44,9 +45,11 @@ public class RevivalHandler implements Listener {
 				player.sendMessage(ChatColor.MAGIC + "What is this?");
 				player.sendMessage(ChatColor.RED + "You have been resurrected in a new body!");
 				player.sendMessage(ChatColor.RED + "You don't feel so good.");
+				
+				new KarmaHandler().setPlayerKarma(player, -500);
 				break;
 			case RELIGIOUS:
-				player.addPotionEffect(new PotionEffect(PotionEffectType.LUCK, 168000, 1, true));
+				player.addPotionEffect(new PotionEffect(PotionEffectType.LUCK, 20 * 60 * 20 * 7, 1, true));
 				player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 100, 1));
 				
 				player.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ(), 500);
@@ -57,6 +60,7 @@ public class RevivalHandler implements Listener {
 				player.sendMessage(ChatColor.MAGIC + "What is this?");
 				player.sendMessage(ChatColor.GREEN + "You have been blessed by the gods!");
 				player.sendMessage(ChatColor.GREEN + "You feel greater than ever.");
+				new KarmaHandler().setPlayerKarma(player, 500);
 				break;
 			}
 

@@ -6,16 +6,21 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
+import com.jorislodewijks.hardcorerevival.books.CultBookHandler;
+import com.jorislodewijks.hardcorerevival.books.ReligiousBookHandler;
 import com.jorislodewijks.hardcorerevival.karma.KarmaHandler;
 
 import net.md_5.bungee.api.ChatColor;
 
 public class MyCommandExecutor implements CommandExecutor {
 
-	public MyCommandExecutor() {	}
+	public MyCommandExecutor() {
+	}
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -79,13 +84,13 @@ public class MyCommandExecutor implements CommandExecutor {
 					return false;
 				}
 				location = player.getLocation(); // revived player's own location for now.'
-				
-				if(args.length > 1) {
+
+				if (args.length > 1) {
 					resurrectionType = ResurrectionType.valueOf(args[1]);
 				} else {
 					resurrectionType = ResurrectionType.RELIGIOUS;
 				}
-				
+
 			} else {
 				if (sender instanceof Player) {
 					player = (Player) sender;
@@ -137,11 +142,11 @@ public class MyCommandExecutor implements CommandExecutor {
 					}
 
 				}
-				
-				if(args.length > 6) {
+
+				if (args.length > 6) {
 					resurrectionType = ResurrectionType.valueOf(args[6]);
 				}
-				
+
 			} else {
 
 				if (sender instanceof Entity) {
@@ -157,6 +162,41 @@ public class MyCommandExecutor implements CommandExecutor {
 
 			new RevivalHandler().reviveNearestDeadPlayer(searchLocation, revivalLocation, resurrectionType);
 			return true;
+		}
+
+		if (cmd.getName().equalsIgnoreCase("getritualbook")) {
+			if (sender instanceof Player) {
+				ResurrectionType bookType = ResurrectionType.RELIGIOUS;
+				if (args.length > 0) {
+					try {
+						bookType = ResurrectionType.valueOf(args[0]);
+					} catch (Exception e) {
+						sender.sendMessage(ChatColor.RED + args[0] + " is not a valid type.");
+						return false;
+					}
+				}
+
+				ItemStack item = null;
+				switch (bookType) {
+				case CULT:
+					item = new CultBookHandler().getInstructionBook();
+					break;
+				case RELIGIOUS:
+					item = new ReligiousBookHandler().getInstructionBook();
+					break;
+				}
+
+				if (item != null) {
+					Item drop = ((Player) sender).getWorld().dropItem(((Player) sender).getLocation(), item);
+					drop.setPickupDelay(0);
+					return true;
+				} else {
+					sender.sendMessage(ChatColor.RED + "Couldn't find book type: " + bookType);
+				}
+			} else {
+				sender.sendMessage(ChatColor.RED + "You must be a player to run this command!");
+			}
+
 		}
 
 		return false;

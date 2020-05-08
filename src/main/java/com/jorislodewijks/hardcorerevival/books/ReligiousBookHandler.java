@@ -1,6 +1,5 @@
 package com.jorislodewijks.hardcorerevival.books;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Material;
@@ -13,20 +12,15 @@ import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
 import com.jorislodewijks.hardcorerevival.ritual.Ritual;
 import com.jorislodewijks.hardcorerevival.ritual.RitualHandler;
 
-public class CultBookHandler implements IBookHandler {
-
-	public CultBookHandler() {
-
-	}
-
+public class ReligiousBookHandler implements IBookHandler {
+	
 	public ItemStack getInstructionBook() {
 		ItemStack itemStack = new ItemStack(Material.WRITTEN_BOOK, 1);
 		BookMeta bookMeta = (BookMeta) itemStack.getItemMeta();
 
-		List<Ritual> rituals = RitualHandler.getRituals(ResurrectionType.CULT);
+		List<Ritual> rituals = RitualHandler.getRituals(ResurrectionType.RELIGIOUS);
 
-		String text = "\n\n\n" + "§4§l     Dark Rituals§0\n" + "           and\n" + "§4§l  Peculier Potions§0\n" + "\n"
-				+ "\n" + "\n" + "\n" + " A instructional set of         pages by\n" + "§5§o   Salazar the Foul§0§o.§0";
+		String text = "\n\n\n" + "§4§l     TO BE NAMED§0\n";
 
 		text += getContentPage(rituals);
 		text += getAltarPage();
@@ -36,8 +30,8 @@ public class CultBookHandler implements IBookHandler {
 		}
 
 		bookMeta.setGeneration(Generation.TATTERED);
-		bookMeta.setTitle("Dark Rituals à Peculier Potions");
-		bookMeta.setAuthor("Salazar the Foul");
+		bookMeta.setTitle("TO BE NAMED");
+		bookMeta.setAuthor("UNKNOWN");
 
 		bookMeta.setPages(text.split("/p"));
 		itemStack.setItemMeta(bookMeta);
@@ -47,7 +41,7 @@ public class CultBookHandler implements IBookHandler {
 	private String getContentPage(List<Ritual> rituals) {
 		String text = "/p";
 		text += "  Table of Contents\n" + "*-----------------*\n" + "\n"
-				+ "1. How to build an altar worthy of the devil.\n" + "\n"
+				+ "1. How to build an altar worthy of the Lord.\n" + "\n"
 				+ "2. Rituals and Actions: praising the lord.\n§0";
 
 		for (int i = 0; i < rituals.size(); i++) {
@@ -62,9 +56,8 @@ public class CultBookHandler implements IBookHandler {
 
 	private String getAltarPage() {
 		String text = "/p";
-		text += "Altar\n\nA dark altar is built, by heating a cauldron with a fire. "
-				+ "The cauldron will have to be filled with water to work. You know the cauldron works, "
-				+ "if purple power is emitting from the cauldron.";
+		text += "Altar\n\nA godly altar is built, by circling a block of emerald with white stained glass. "
+				+ "Next to this glass, an enchantment table must be placed. You know it worked, if you hear the godly sounds."; 
 		return text;
 	}
 
@@ -76,4 +69,5 @@ public class CultBookHandler implements IBookHandler {
 		}
 		return text;
 	}
+
 }

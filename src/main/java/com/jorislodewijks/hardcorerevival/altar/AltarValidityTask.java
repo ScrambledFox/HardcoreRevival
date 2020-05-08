@@ -21,6 +21,10 @@ public class AltarValidityTask extends BukkitRunnable {
 			}
 			break;
 		case RELIGIOUS:
+			if (!Altar.checkBlocksForReligiousAltarValidity(altar.getBlocks())) {
+				// Not valid anymore
+				AltarHandler.removeAltar(altar);
+			}
 			break;
 		}
 

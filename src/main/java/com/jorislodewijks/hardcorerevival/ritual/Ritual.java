@@ -4,33 +4,50 @@ import java.util.List;
 
 import org.bukkit.inventory.ItemStack;
 
+import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
+
 public class Ritual {
 
+	public static enum RitualType {
+		INSTRUCTION_BOOK, REVIVAL, PRAY
+	};
+
 	private String name;
-	private List<ItemStack> ingredients;
-	private List<ItemStack> results;
+	private RitualType ritualType;
+	private ResurrectionType resurrectionType;
+	private List<ItemStack> ingredients; // What ingredients are necessary for this ritual?
+	private List<ItemStack> results; // Which resulting items will be spawned? CANNOT SPAWN BOOK AS IT NEEDS THE
+										// RITUAL ARRAY... STATIC ERROR
 	private int time;
 
-	private boolean positiveRitual;
 	private int karmaThreshold;
 	private int karmaCost;
 
 	private int eventActivationId;
 
-	public Ritual(String name, List<ItemStack> ingredients, List<ItemStack> results, int time, boolean positiveRitual,
-			int karmaThreshold, int karmaCost, int eventActivationId) {
+	public Ritual(String name, ResurrectionType resurrectionType, RitualType ritualType, List<ItemStack> ingredients,
+			List<ItemStack> results, int time, int karmaThreshold, int karmaCost, int eventActivationId) {
 		this.name = name;
+		this.resurrectionType = resurrectionType;
+		this.ritualType = ritualType;
 		this.ingredients = ingredients;
 		this.results = results;
 		this.time = time;
-		this.positiveRitual = positiveRitual;
 		this.karmaThreshold = karmaThreshold;
 		this.karmaCost = karmaCost;
 		this.eventActivationId = eventActivationId;
 	}
-	
+
 	public String getName() {
 		return this.name;
+	}
+
+	public RitualType getRitualType() {
+		return this.ritualType;
+	}
+
+	public ResurrectionType getResurrectionType() {
+		return this.resurrectionType;
 	}
 
 	public List<ItemStack> getIngredients() {
@@ -38,8 +55,13 @@ public class Ritual {
 	}
 
 	public boolean meetsIngredients(List<ItemStack> items) {
-		for (ItemStack itemStack : this.ingredients) {
-			if (!items.contains(new ItemStack(itemStack.getType()))) {
+		for (int i = 0; i < this.ingredients.size(); i++) {
+			if (!items.contains(this.ingredients.get(i))) {
+				return false;
+			}
+			
+			ItemStack selectedItem = items.get(items.indexOf(this.ingredients.get(i)));
+			if (selectedItem.getAmount() < this.ingredients.get(i).getAmount()) {
 				return false;
 			}
 		}
