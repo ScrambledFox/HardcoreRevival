@@ -1,4 +1,4 @@
-package com.jorislodewijks.hardcorerevival;
+package com.jorislodewijks.hardcorerevival.altar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,14 +12,14 @@ import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.CauldronLevelChangeEvent;
 
+import com.jorislodewijks.hardcorerevival.HardcoreRevival;
 import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
+import com.jorislodewijks.hardcorerevival.karma.KarmaHandler;
 
 public class AltarHandler implements Listener {
-	private final HardcoreRevival plugin;
 	public static List<Altar> altars;
 
-	public AltarHandler(HardcoreRevival plugin) {
-		this.plugin = plugin;
+	public AltarHandler() {
 		altars = new ArrayList<Altar>();
 	}
 
@@ -27,7 +27,8 @@ public class AltarHandler implements Listener {
 	public void BlockPlaceEvent​(BlockPlaceEvent event) {
 		if (Altar.CultMaterials.contains(event.getBlock().getType())) {
 			if (Altar.checkBlocksForCultAltarValidity(Altar.getCultAltarBlocks(event.getBlock()))) {
-				registerNewAltar(plugin, Altar.getCultAltarBlocks(event.getBlock()), ResurrectionType.CULT);
+				registerNewAltar(event.getPlayer(), Altar.getCultAltarBlocks(event.getBlock()),
+						ResurrectionType.CULT);
 			}
 		}
 		if (Altar.ReligiousMaterials.contains(event.getBlock().getType())) {
@@ -51,7 +52,10 @@ public class AltarHandler implements Listener {
 				}
 
 				if (!exists) {
-					registerNewAltar(plugin, Altar.getCultAltarBlocks(event.getBlock()), ResurrectionType.CULT);
+					Player p = null;
+					if(event.getEntity() instanceof Player)
+						p = (Player)event.getEntity();
+					registerNewAltar(p, Altar.getCultAltarBlocks(event.getBlock()), ResurrectionType.CULT);
 				}
 			}
 		}
@@ -63,7 +67,7 @@ public class AltarHandler implements Listener {
 		if (event.getCause() == BlockIgniteEvent.IgniteCause.FLINT_AND_STEEL) {
 			if (Altar.CultMaterials.contains(event.getBlock().getType())) {
 				if (Altar.checkBlocksForCultAltarValidity(Altar.getCultAltarBlocks(event.getBlock()))) {
-					registerNewAltar(plugin, Altar.getCultAltarBlocks(event.getBlock()), ResurrectionType.CULT);
+					registerNewAltar(p, Altar.getCultAltarBlocks(event.getBlock()), ResurrectionType.CULT);
 				}
 			}
 		}
@@ -79,15 +83,17 @@ public class AltarHandler implements Listener {
 		return null;
 	}
 
-	public static Altar registerNewAltar(HardcoreRevival plugin, List<Block> blocks, ResurrectionType type) {
+	public static Altar registerNewAltar(Player creator, List<Block> blocks,
+			ResurrectionType type) {
 		Altar altar;
-		altar = new Altar(plugin, type, blocks);
+		altar = new Altar(creator.getUniqueId(), type, blocks);
 		altars.add(altar);
+		if (creator != null)
+			new KarmaHandler().modPlayerKarma(creator, -50);
 		return altar;
 	}
 
 	public static void removeAltar(Altar altar) {
-		System.out.println("Removing Altar.");
 		altar.stopTasks();
 		altars.remove(altar);
 	}

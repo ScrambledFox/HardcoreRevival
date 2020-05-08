@@ -9,15 +9,13 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
+import com.jorislodewijks.hardcorerevival.karma.KarmaHandler;
 
 import net.md_5.bungee.api.ChatColor;
 
 public class MyCommandExecutor implements CommandExecutor {
-	private final HardcoreRevival plugin;
 
-	public MyCommandExecutor(HardcoreRevival plugin) {
-		this.plugin = plugin;
-	}
+	public MyCommandExecutor() {	}
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -32,7 +30,7 @@ public class MyCommandExecutor implements CommandExecutor {
 				} else {
 					try {
 						int i = Integer.parseInt(args[1]);
-						KarmaHandler handler = new KarmaHandler(plugin);
+						KarmaHandler handler = new KarmaHandler();
 						handler.setPlayerKarma(player, i);
 						sender.sendMessage(ChatColor.GREEN + "Set " + player.getDisplayName() + "'s karma to " + i);
 						player.sendMessage(ChatColor.LIGHT_PURPLE + "Your karma has been magically set to: " + i);
@@ -63,7 +61,7 @@ public class MyCommandExecutor implements CommandExecutor {
 				}
 			}
 
-			int playerKarma = new KarmaHandler(plugin).getPlayerKarma(player);
+			int playerKarma = new KarmaHandler().getPlayerKarma(player);
 			sender.sendMessage(
 					(playerKarma >= 0 ? ChatColor.GREEN : ChatColor.RED) + "Your current karma is: " + playerKarma);
 			return true;
@@ -99,7 +97,7 @@ public class MyCommandExecutor implements CommandExecutor {
 				}
 			}
 
-			new RevivalHandler(plugin).revivePlayer(player, location, resurrectionType);
+			new RevivalHandler().revivePlayer(player, location, resurrectionType);
 			return true;
 		}
 
@@ -157,7 +155,7 @@ public class MyCommandExecutor implements CommandExecutor {
 
 			}
 
-			new RevivalHandler(plugin).reviveNearestDeadPlayer(searchLocation, revivalLocation, resurrectionType);
+			new RevivalHandler().reviveNearestDeadPlayer(searchLocation, revivalLocation, resurrectionType);
 			return true;
 		}
 

@@ -18,10 +18,8 @@ import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
 import net.md_5.bungee.api.ChatColor;
 
 public class RevivalHandler implements Listener {
-	public final HardcoreRevival plugin;
 
-	public RevivalHandler(HardcoreRevival plugin) {
-		this.plugin = plugin;
+	public RevivalHandler() {
 	}
 
 	public boolean revivePlayer(Player player, Location revivalLocation, ResurrectionType ressurectionType) {

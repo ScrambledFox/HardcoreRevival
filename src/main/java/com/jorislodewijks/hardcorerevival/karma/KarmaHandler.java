@@ -1,4 +1,4 @@
-package com.jorislodewijks.hardcorerevival;
+package com.jorislodewijks.hardcorerevival.karma;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,28 +15,28 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 
+import com.jorislodewijks.hardcorerevival.HardcoreRevival;
+
 import net.md_5.bungee.api.ChatColor;
 
 public class KarmaHandler implements Listener {
-	private final HardcoreRevival plugin;
 
 	private static List<KarmaEvent> karmaEvents = new ArrayList<>(Arrays.asList(
 			new KarmaEvent(-100, "You are a bad human, buy you kinda like it...", -1), new KarmaEvent(100, "You are a good human.", -1)));
 
-	public KarmaHandler(HardcoreRevival plugin) {
-		this.plugin = plugin;
+	public KarmaHandler() {
 	}
 
 	public void setPlayerKarma(Player player, int karma) {
-		player.setMetadata("Karma", new FixedMetadataValue(plugin, karma));
-		plugin.dataHandler.setData(player, karma);
+		player.setMetadata("Karma", new FixedMetadataValue(HardcoreRevival.instance, karma));
+		HardcoreRevival.instance.dataHandler.setData(player, karma);
 	}
 
 	public int getPlayerKarma(Player player) {
 		if (player.hasMetadata("Karma")) {
 
 			for (MetadataValue val : player.getMetadata("Karma")) {
-				if (val.getOwningPlugin() == plugin)
+				if (val.getOwningPlugin() == HardcoreRevival.instance)
 					return val.asInt();
 			}
 
@@ -54,7 +54,7 @@ public class KarmaHandler implements Listener {
 
 	@EventHandler
 	public void PlayerJoinEvent(PlayerJoinEvent event) {
-		setPlayerKarma(event.getPlayer(), plugin.dataHandler.getData(event.getPlayer()).karma);
+		setPlayerKarma(event.getPlayer(), HardcoreRevival.instance.dataHandler.getData(event.getPlayer()).karma);
 	}
 
 	@EventHandler

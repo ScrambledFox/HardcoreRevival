@@ -1,4 +1,4 @@
-package com.jorislodewijks.hardcorerevival;
+package com.jorislodewijks.hardcorerevival.karma;
 
 public class KarmaEvent {
 

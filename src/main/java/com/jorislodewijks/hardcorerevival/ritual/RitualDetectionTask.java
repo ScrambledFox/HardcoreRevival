@@ -1,17 +1,18 @@
-package com.jorislodewijks.hardcorerevival;
+package com.jorislodewijks.hardcorerevival.ritual;
 
 import java.util.List;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import com.jorislodewijks.hardcorerevival.HardcoreRevival;
+import com.jorislodewijks.hardcorerevival.altar.Altar;
+
 public class RitualDetectionTask extends BukkitRunnable {
-	private final HardcoreRevival plugin;
 
 	private Altar altar;
 
-	public RitualDetectionTask(HardcoreRevival plugin, Altar altar) {
-		this.plugin = plugin;
+	public RitualDetectionTask(Altar altar) {
 		this.altar = altar;
 	}
 
@@ -33,8 +34,6 @@ public class RitualDetectionTask extends BukkitRunnable {
 					altar.setActiveRitual(ritual);
 				}
 			}
-
-			System.out.println("ITEMS: " + items.toString());
 		}
 
 	}

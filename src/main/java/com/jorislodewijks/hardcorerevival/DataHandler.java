@@ -10,19 +10,17 @@ import java.util.HashMap;
 import org.bukkit.entity.Player;
 
 public class DataHandler {
-	private final HardcoreRevival plugin;
 	HashMap<String, Integer> data;
 
 	@SuppressWarnings("unchecked")
-	public DataHandler(HardcoreRevival plugin) {
-		this.plugin = plugin;
-		File dir = plugin.getDataFolder();
+	public DataHandler() {
+		File dir = HardcoreRevival.instance.getDataFolder();
 
 		if (!dir.exists())
 			if (!dir.mkdir())
-				System.out.println("Could not create directory for plugin: " + plugin.getDescription().getName());
+				System.out.println("Could not create directory for plugin: " + HardcoreRevival.instance.getDescription().getName());
 
-		data = (HashMap<String, Integer>) load(new File(plugin.getDataFolder(), "data.dat"));
+		data = (HashMap<String, Integer>) load(new File(HardcoreRevival.instance.getDataFolder(), "data.dat"));
 
 		if (data == null) {
 			data = new HashMap<String, Integer>();
@@ -30,7 +28,7 @@ public class DataHandler {
 	}
 
 	public void saveData() {
-		save(data, new File(plugin.getDataFolder(), "data.dat"));
+		save(data, new File(HardcoreRevival.instance.getDataFolder(), "data.dat"));
 	}
 
 	private void save(Object o, File f) {

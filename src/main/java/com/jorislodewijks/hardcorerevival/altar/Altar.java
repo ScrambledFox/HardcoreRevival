@@ -1,8 +1,9 @@
-package com.jorislodewijks.hardcorerevival;
+package com.jorislodewijks.hardcorerevival.altar;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -16,30 +17,38 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
 
+import com.jorislodewijks.hardcorerevival.HardcoreRevival;
 import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
-
-import net.md_5.bungee.api.ChatColor;
+import com.jorislodewijks.hardcorerevival.RevivalHandler;
+import com.jorislodewijks.hardcorerevival.books.CultBookHandler;
+import com.jorislodewijks.hardcorerevival.ritual.Ritual;
+import com.jorislodewijks.hardcorerevival.ritual.RitualDetectionTask;
+import com.jorislodewijks.hardcorerevival.ritual.RitualRunnerTask;
 
 public class Altar {
-	private final HardcoreRevival plugin;
-
 	public static List<Material> CultMaterials = new ArrayList<Material>(
 			Arrays.asList(Material.CAULDRON, Material.FIRE, Material.CAMPFIRE));
 	public static List<Material> ReligiousMaterials = new ArrayList<Material>(
 			Arrays.asList(Material.DIAMOND_BLOCK, Material.EMERALD_BLOCK));
 
-	private static List<Ritual> CultRituals = new ArrayList<Ritual>(
-			Arrays.asList(new Ritual("Bodily Sacrificial Revival",
-					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.TOTEM_OF_UNDYING, 1))), 10, false,
-					-100, -50, -1)));
+	private static List<Ritual> CultRituals = new ArrayList<Ritual>(Arrays.asList(
+			new Ritual("Ritual Instruction Spawning",
+					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.BOOK, 1),
+							new ItemStack(Material.FEATHER, 1), new ItemStack(Material.INK_SAC, 1))),
+					new ArrayList<ItemStack>(Arrays.asList(new CultBookHandler().getInstructionBook())), 10, false,
+					-100, -50, -1),
+			new Ritual("Bodily Sacrificial Revival",
+					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.TOTEM_OF_UNDYING, 1))), null, 10,
+					false, -100, -50, -1)));
 
 	private static List<Ritual> ReligiousRituals = new ArrayList<Ritual>(
 			Arrays.asList(new Ritual("Bodily Sacrificial Revival",
-					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.TOTEM_OF_UNDYING, 1))), 10, false,
-					-100, -50, -1)));
+					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.TOTEM_OF_UNDYING, 1))), null, 10,
+					false, -100, -50, -1)));
 
 	private ResurrectionType altarType;
 	private List<Block> blocks;
+	private UUID creatorUUID;
 
 	private Ritual activeRitual;
 
@@ -48,23 +57,25 @@ public class Altar {
 	private BukkitTask ritualDetectionTask;
 	private BukkitTask ritualRunnerTask;
 
-	public Altar(HardcoreRevival plugin, ResurrectionType altarType, List<Block> blocks) {
-		this.plugin = plugin;
+	public Altar(UUID creatorUUID, ResurrectionType altarType, List<Block> blocks) {
+		this.creatorUUID = creatorUUID;
 		this.altarType = altarType;
 		this.blocks = blocks;
 
-		plugin.getServer().broadcastMessage(ChatColor.RED + "Created a new Altar!");
-
-		particleTask = new AltarParticleEffectsTask(plugin, this).runTaskTimer(plugin, 0, 2);
-		validityTask = new AltarValidityTask(plugin, this).runTaskTimer(plugin, 20, 20);
-		ritualDetectionTask = new RitualDetectionTask(plugin, this).runTaskTimer(plugin, 0, 20/* * 10 */);
+		particleTask = new AltarParticleEffectsTask(this).runTaskTimer(HardcoreRevival.instance, 0, 2);
+		validityTask = new AltarValidityTask(this).runTaskTimer(HardcoreRevival.instance, 20, 20);
+		ritualDetectionTask = new RitualDetectionTask(this).runTaskTimer(HardcoreRevival.instance, 0, 20/* * 10 */);
 	}
 
 	public void stopTasks() {
-		particleTask.cancel();
-		validityTask.cancel();
-		ritualDetectionTask.cancel();
-		ritualRunnerTask.cancel();
+		if (particleTask != null)
+			particleTask.cancel();
+		if (validityTask != null)
+			validityTask.cancel();
+		if (ritualDetectionTask != null)
+			ritualDetectionTask.cancel();
+		if (ritualRunnerTask != null)
+			ritualRunnerTask.cancel();
 	}
 
 	public Block getImportantBlock() {
@@ -116,7 +127,7 @@ public class Altar {
 			this.cancelRitual();
 
 		this.activeRitual = ritual;
-		ritualRunnerTask = new RitualRunnerTask(plugin, this, ritual).runTaskTimer(plugin, 0, 20);
+		ritualRunnerTask = new RitualRunnerTask(this, ritual).runTaskTimer(HardcoreRevival.instance, 0, 20);
 	}
 
 	public boolean hasActiveRitual() {
@@ -127,26 +138,27 @@ public class Altar {
 		ritualRunnerTask.cancel();
 		this.activeRitual = null;
 	}
-	
+
 	public void completeRitual() {
 		ritualRunnerTask.cancel();
 		this.activeRitual = null;
-		
-		new RevivalHandler(plugin).reviveNearestDeadPlayer(this.getImportantBlock().getLocation().add(0.5, 0.5, 0.5), this.getImportantBlock().getLocation().add(0.5, 0.5, 0.5), this.altarType);
+
+		new RevivalHandler().reviveNearestDeadPlayer(this.getImportantBlock().getLocation().add(0.5, 0.5, 0.5),
+				this.getImportantBlock().getLocation().add(0.5, 0.5, 0.5), this.altarType);
 	}
 
 	public List<ItemStack> getAltarInventory() {
 		List<ItemStack> items = new ArrayList<ItemStack>();
-		for(Entity e : this.getAlterItemEntities()) {
-			items.add(((Item)e).getItemStack());
+		for (Entity e : this.getAlterItemEntities()) {
+			items.add(((Item) e).getItemStack());
 		}
 		return items;
 	}
-	
-	public List<Entity> getAlterItemEntities(){
+
+	public List<Entity> getAlterItemEntities() {
 		List<Entity> items = new ArrayList<Entity>();
 		Location itemsLocation = this.getInventoryLocation();
-		
+
 		for (Entity entity : this.getImportantBlock().getWorld()
 				.getNearbyEntities(new BoundingBox(itemsLocation.getX() - 0.5, itemsLocation.getY() - 0.5,
 						itemsLocation.getZ() - 0.5, itemsLocation.getX() + 0.5, itemsLocation.getY() + 0.5,
@@ -155,7 +167,7 @@ public class Altar {
 				items.add(entity);
 			}
 		}
-		
+
 		return items;
 	}
 

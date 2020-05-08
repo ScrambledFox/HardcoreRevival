@@ -1,13 +1,13 @@
-package com.jorislodewijks.hardcorerevival;
+package com.jorislodewijks.hardcorerevival.altar;
 
 import org.bukkit.scheduler.BukkitRunnable;
 
+import com.jorislodewijks.hardcorerevival.HardcoreRevival;
+
 public class AltarValidityTask extends BukkitRunnable {
-	private final HardcoreRevival plugin;
 	private Altar altar;
 
-	public AltarValidityTask(HardcoreRevival plugin, Altar altar) {
-		this.plugin = plugin;
+	public AltarValidityTask(Altar altar) {
 		this.altar = altar;
 	}
 
