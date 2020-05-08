@@ -1,0 +1,27 @@
+name: HardcoreRevival
+main: com.jorislodewijks.hardcorerevival.HardcoreRevival
+version: 0.0.1
+api-version: 1.13
+author: Joris Lodewijks
+
+commands:
+  setkarma:
+    description: Sets your karma level.
+    usage: "/setkarma player karma"
+    permission: hardcorerevival.op
+    permission-message: You must be opped to run this command.
+  getkarma:
+    description: Gets your karma level.
+    usage: "/getkarma [player]"
+    permission-message: You don't have permission to run this command.
+
+  revive:
+    description: Revive yourself or another player.
+    usage: "/revive [player] [type]"
+    permission: hardcorerevival.op
+    permission-message: You must be opped to run this command.
+  revivenearest:
+    description: Revive the nearest dead player.
+    usage: "/revivenearest [searchLocation] [reviveLocation] [type]"
+    permission: hardcorerevival.op
+    permission-message: You must be opped to run this command.
