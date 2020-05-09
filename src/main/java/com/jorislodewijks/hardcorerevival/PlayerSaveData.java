@@ -1,7 +1,13 @@
 package com.jorislodewijks.hardcorerevival;
 
-public class PlayerSaveData {
+import java.io.Serializable;
 
+public class PlayerSaveData implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8032957560320757765L;
 	public String player;
 	public int karma;
 	

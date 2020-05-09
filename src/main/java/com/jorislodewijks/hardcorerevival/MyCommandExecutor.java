@@ -14,6 +14,7 @@ import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
 import com.jorislodewijks.hardcorerevival.books.CultBookHandler;
 import com.jorislodewijks.hardcorerevival.books.ReligiousBookHandler;
 import com.jorislodewijks.hardcorerevival.karma.KarmaHandler;
+import com.jorislodewijks.hardcorerevival.ritual.Ritual.RitualSource;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -48,28 +49,29 @@ public class MyCommandExecutor implements CommandExecutor {
 		}
 
 		if (cmd.getName().equalsIgnoreCase("getkarma")) {
-			Player player;
-
-			if (args.length > 0) {
-				player = Bukkit.getPlayer(args[0]);
-				if (player == null) {
-					sender.sendMessage(
-							ChatColor.RED + "The player " + args[0] + " could not be found or isn't online!");
-					return false;
-				}
-			} else {
-				if (sender instanceof Player) {
-					player = (Player) sender;
-				} else {
-					sender.sendMessage(ChatColor.RED + "You must be a player to run this command!");
-					return false;
-				}
-			}
-
-			int playerKarma = new KarmaHandler().getPlayerKarma(player);
-			sender.sendMessage(
-					(playerKarma >= 0 ? ChatColor.GREEN : ChatColor.RED) + "Your current karma is: " + playerKarma);
+			sender.sendMessage(ChatColor.RED + "Karma is currently disabled, as it is not used for anything.");
 			return true;
+
+//			if (args.length > 0) {
+//				player = Bukkit.getPlayer(args[0]);
+//				if (player == null) {
+//					sender.sendMessage(
+//							ChatColor.RED + "The player " + args[0] + " could not be found or isn't online!");
+//					return false;
+//				}
+//			} else {
+//				if (sender instanceof Player) {
+//					player = (Player) sender;
+//				} else {
+//					sender.sendMessage(ChatColor.RED + "You must be a player to run this command!");
+//					return false;
+//				}
+//			}
+//
+//			int playerKarma = new KarmaHandler().getPlayerKarma(player);
+//			sender.sendMessage(
+//					(playerKarma >= 0 ? ChatColor.GREEN : ChatColor.RED) + "Your current karma is: " + playerKarma);
+//			return true;
 		}
 
 		if (cmd.getName().equalsIgnoreCase("revive")) {
@@ -167,6 +169,7 @@ public class MyCommandExecutor implements CommandExecutor {
 		if (cmd.getName().equalsIgnoreCase("getritualbook")) {
 			if (sender instanceof Player) {
 				ResurrectionType bookType = ResurrectionType.RELIGIOUS;
+				RitualSource ritualSource = RitualSource.INSTRUCTION_BOOK;
 				if (args.length > 0) {
 					try {
 						bookType = ResurrectionType.valueOf(args[0]);
@@ -174,15 +177,24 @@ public class MyCommandExecutor implements CommandExecutor {
 						sender.sendMessage(ChatColor.RED + args[0] + " is not a valid type.");
 						return false;
 					}
+
+					if (args.length > 1) {
+						try {
+							ritualSource = RitualSource.valueOf(args[1]);
+						} catch (Exception e) {
+							sender.sendMessage(ChatColor.RED + args[1] + " is not a valid source.");
+							return false;
+						}
+					}
 				}
 
 				ItemStack item = null;
 				switch (bookType) {
 				case CULT:
-					item = new CultBookHandler().getInstructionBook();
+					item = new CultBookHandler().getInstructionBook(ritualSource);
 					break;
 				case RELIGIOUS:
-					item = new ReligiousBookHandler().getInstructionBook();
+					item = new ReligiousBookHandler().getInstructionBook(ritualSource);
 					break;
 				}
 

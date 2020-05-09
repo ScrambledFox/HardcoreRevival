@@ -23,6 +23,7 @@ import com.jorislodewijks.hardcorerevival.Players.PlayerHandler;
 import com.jorislodewijks.hardcorerevival.altar.Altar;
 import com.jorislodewijks.hardcorerevival.books.CultBookHandler;
 import com.jorislodewijks.hardcorerevival.books.ReligiousBookHandler;
+import com.jorislodewijks.hardcorerevival.ritual.Ritual.RitualSource;
 import com.jorislodewijks.hardcorerevival.ritual.Ritual.RitualType;
 
 public class RitualHandler implements Listener {
@@ -30,26 +31,29 @@ public class RitualHandler implements Listener {
 	private static List<Ritual> CultRituals = new ArrayList<Ritual>(
 			Arrays.asList(
 					new Ritual("Ritual Instruction Spawning", ResurrectionType.CULT, RitualType.INSTRUCTION_BOOK,
+							RitualSource.INSTRUCTION_BOOK,
 							new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.BOOK, 1),
 									new ItemStack(Material.FEATHER, 1), new ItemStack(Material.INK_SAC, 1))),
 							null, 10, 0, -10, -1),
 					new Ritual("Bodily Sacrificial Revival", ResurrectionType.CULT, RitualType.REVIVAL,
+							RitualSource.NONE,
 							new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.TOTEM_OF_UNDYING, 1),
 									new ItemStack(Material.BONE, 8), new ItemStack(Material.REDSTONE, 16),
 									new ItemStack(Material.GUNPOWDER, 2))),
 							null, 60, -100, -50, -1)));
 
 	private static List<Ritual> ReligiousRituals = new ArrayList<Ritual>(Arrays.asList(
-			new Ritual("Heavenly Revival", ResurrectionType.RELIGIOUS, RitualType.REVIVAL,
+			new Ritual("Heavenly Revival", ResurrectionType.RELIGIOUS, RitualType.REVIVAL, RitualSource.NONE,
 					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.TOTEM_OF_UNDYING, 1),
 							new ItemStack(Material.GOLDEN_APPLE, 1), new ItemStack(Material.EMERALD, 16),
 							new ItemStack(Material.POPPY, 1))),
 					null, 60, 100, 50, -1),
 			new Ritual("The Lords instructions", ResurrectionType.RELIGIOUS, RitualType.INSTRUCTION_BOOK,
+					RitualSource.INSTRUCTION_BOOK,
 					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.BOOK, 1),
 							new ItemStack(Material.FEATHER, 1), new ItemStack(Material.INK_SAC, 1))),
 					null, 10, 0, 10, -1),
-			new Ritual("Pray", ResurrectionType.RELIGIOUS, RitualType.PRAY,
+			new Ritual("Pray", ResurrectionType.RELIGIOUS, RitualType.PRAY, RitualSource.NONE,
 					new ArrayList<ItemStack>(Arrays.asList(new ItemStack(Material.GOLD_INGOT, 1))), null, 10, 0, 10,
 					-1)));
 
@@ -63,6 +67,8 @@ public class RitualHandler implements Listener {
 		case CULT:
 			event.getAltar().getImportantBlock().getWorld().playSound(
 					event.getAltar().getImportantBlock().getLocation(), Sound.ENTITY_PARROT_IMITATE_GHAST, 1.0f, 0.1f);
+			
+			event.getAltar().drainPower();
 
 			switch (event.getRitual().getRitualType()) {
 			case REVIVAL:
@@ -74,7 +80,7 @@ public class RitualHandler implements Listener {
 			case INSTRUCTION_BOOK:
 				event.getAltar().getImportantBlock().getWorld().dropItemNaturally(
 						event.getAltar().getImportantBlock().getLocation().add(0.5, 0.5, 0.5),
-						new CultBookHandler().getInstructionBook());
+						new CultBookHandler().getInstructionBook(event.getRitual().getSource()));
 				break;
 			case PRAY:
 				new PlayerHandler().giveEffectToNearestPlayer(event.getAltar().getImportantBlock().getLocation(),
@@ -102,11 +108,11 @@ public class RitualHandler implements Listener {
 			case INSTRUCTION_BOOK:
 				event.getAltar().getImportantBlock().getWorld().dropItemNaturally(
 						event.getAltar().getImportantBlock().getLocation().add(0.5, 0.5, 0.5),
-						new ReligiousBookHandler().getInstructionBook());
+						new ReligiousBookHandler().getInstructionBook(event.getRitual().getSource()));
 				break;
 			case PRAY:
-				new PlayerHandler().giveEffectToNearestPlayer(event.getAltar().getImportantBlock().getLocation(),
-						new PotionEffect(PotionEffectType.REGENERATION, 20 * 60 * 5, 1));
+				new PlayerHandler().giveEffectToPlayersWithinRange(event.getAltar().getImportantBlock().getLocation(),
+						5, new PotionEffect(PotionEffectType.REGENERATION, 20 * 60 * 5, 1));
 				break;
 			}
 			break;

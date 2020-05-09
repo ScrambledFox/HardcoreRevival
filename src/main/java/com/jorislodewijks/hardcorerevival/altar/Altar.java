@@ -28,8 +28,8 @@ import com.jorislodewijks.hardcorerevival.ritual.RitualRunnerTask;
 public class Altar {
 	public static List<Material> CultMaterials = new ArrayList<Material>(
 			Arrays.asList(Material.CAULDRON, Material.FIRE, Material.CAMPFIRE));
-	public static List<Material> ReligiousMaterials = new ArrayList<Material>(
-			Arrays.asList(Material.ENCHANTING_TABLE, Material.EMERALD_BLOCK, Material.WHITE_STAINED_GLASS));
+	public static List<Material> ReligiousMaterials = new ArrayList<Material>(Arrays.asList(Material.EMERALD_BLOCK,
+			Material.ENCHANTING_TABLE, Material.WHITE_STAINED_GLASS, Material.LECTERN));
 
 	private ResurrectionType altarType;
 	private List<Block> blocks;
@@ -45,7 +45,7 @@ public class Altar {
 	private BukkitTask ritualRunnerTask;
 
 	public Altar(Player creator, ResurrectionType altarType, List<Block> blocks) {
-		this.creatorUUID = creator.getUniqueId();
+		this.creatorUUID = creator != null ? creator.getUniqueId() : UUID.randomUUID();
 		this.altarType = altarType;
 		this.blocks = blocks;
 
@@ -84,7 +84,7 @@ public class Altar {
 			break;
 		case RELIGIOUS:
 			for (Block block : blocks) {
-				if (block.getType() == ReligiousMaterials.get(1)) {
+				if (block.getType() == ReligiousMaterials.get(0)) {
 					return block;
 				}
 			}
@@ -92,6 +92,10 @@ public class Altar {
 		}
 
 		return null;
+	}
+
+	public UUID getCreatorUUID() {
+		return this.creatorUUID;
 	}
 
 	public List<Block> getBlocks() {
@@ -121,6 +125,43 @@ public class Altar {
 	public void removeActiveRitual() {
 		ritualRunnerTask.cancel();
 		this.activeRitual = null;
+	}
+
+	public void drainPower() {
+		switch (this.altarType) {
+		case CULT:
+			Levelled cauldronData = (Levelled) this.getImportantBlock().getBlockData();
+			cauldronData.setLevel(cauldronData.getLevel() - 1);
+			this.getImportantBlock().setBlockData(cauldronData);
+
+			if (cauldronData.getLevel() == 0) {
+				this.deactivePowerSource();
+			}
+			break;
+		case RELIGIOUS:
+			break;
+		default:
+			break;
+		}
+	}
+
+	public void deactivePowerSource() {
+		switch (this.altarType) {
+		case CULT:
+			Block fireSourceBlock = this.getImportantBlock().getRelative(BlockFace.DOWN);
+			if (fireSourceBlock.getType() == Material.CAMPFIRE) {
+				Lightable fireData = (Lightable) fireSourceBlock.getBlockData();
+				fireData.setLit(false);
+				fireSourceBlock.setBlockData(fireData);
+			} else if (fireSourceBlock.getType() == Material.FIRE) {
+				fireSourceBlock.setType(Material.AIR);
+			}
+			break;
+		case RELIGIOUS:
+			break;
+		default:
+			break;
+		}
 	}
 
 	public List<ItemStack> getAltarInventory() {
@@ -174,7 +215,7 @@ public class Altar {
 
 	public static List<Block> getReligiousAltarBlocks(Block block) {
 		List<Block> blocks = new ArrayList<Block>();
-		if (block.getType() == Material.ENCHANTING_TABLE) {
+		if (block.getType() == Material.ENCHANTING_TABLE || block.getType() == Material.LECTERN) {
 			blocks.add(block);
 
 			Block middleBlock = null;
@@ -196,6 +237,22 @@ public class Altar {
 					}
 				}
 			}
+		} else if (block.getType() == Material.EMERALD_BLOCK) {
+			if (block.getRelative(BlockFace.SOUTH, 2).getType() == Material.ENCHANTING_TABLE
+					|| block.getRelative(BlockFace.SOUTH, 2).getType() == Material.LECTERN) {
+				block = block.getRelative(BlockFace.SOUTH, 2);
+			} else if (block.getRelative(BlockFace.EAST, 2).getType() == Material.ENCHANTING_TABLE
+					|| block.getRelative(BlockFace.EAST, 2).getType() == Material.LECTERN) {
+				block = block.getRelative(BlockFace.EAST, 2);
+			} else if (block.getRelative(BlockFace.NORTH, 2).getType() == Material.ENCHANTING_TABLE
+					|| block.getRelative(BlockFace.NORTH, 2).getType() == Material.LECTERN) {
+				block = block.getRelative(BlockFace.NORTH, 2);
+			} else if (block.getRelative(BlockFace.WEST, 2).getType() == Material.ENCHANTING_TABLE
+					|| block.getRelative(BlockFace.WEST, 2).getType() == Material.LECTERN) {
+				block = block.getRelative(BlockFace.WEST, 2);
+			}
+			
+			return Altar.getReligiousAltarBlocks(block);
 		}
 
 		return blocks;
@@ -238,16 +295,19 @@ public class Altar {
 
 	public static boolean checkBlocksForReligiousAltarValidity(List<Block> blocks) {
 		Block middleBlock = null;
-		Block enchantingTable = null;
+		Block table = null;
 
 		for (Block block : blocks) {
 			if (block.getType() == Material.EMERALD_BLOCK)
 				middleBlock = block;
-			if (block.getType() == Material.ENCHANTING_TABLE)
-				enchantingTable = block;
+			if (block.getType() == Material.ENCHANTING_TABLE || block.getType() == Material.LECTERN)
+				table = block;
 		}
 
 		if (middleBlock == null)
+			return false;
+
+		if (table == null)
 			return false;
 
 		for (int x = 0; x < 3; x++) {

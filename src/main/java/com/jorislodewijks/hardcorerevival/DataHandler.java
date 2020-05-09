@@ -5,12 +5,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.HashMap;
+import java.util.List;
 
 import org.bukkit.entity.Player;
 
+import com.jorislodewijks.hardcorerevival.altar.Altar;
+import com.jorislodewijks.hardcorerevival.altar.AltarSaveData;
+
 public class DataHandler {
-	HashMap<String, Integer> data;
+	SaveData data;
 
 	@SuppressWarnings("unchecked")
 	public DataHandler() {
@@ -18,12 +21,13 @@ public class DataHandler {
 
 		if (!dir.exists())
 			if (!dir.mkdir())
-				System.out.println("Could not create directory for plugin: " + HardcoreRevival.instance.getDescription().getName());
+				System.out.println("Could not create directory for plugin: "
+						+ HardcoreRevival.instance.getDescription().getName());
 
-		data = (HashMap<String, Integer>) load(new File(HardcoreRevival.instance.getDataFolder(), "data.dat"));
+		data = (SaveData) load(new File(HardcoreRevival.instance.getDataFolder(), "data.dat"));
 
 		if (data == null) {
-			data = new HashMap<String, Integer>();
+			data = new SaveData();
 		}
 	}
 
@@ -56,13 +60,20 @@ public class DataHandler {
 		}
 	}
 
-	public void setData(Player player, int karma) {
-		this.data.put(player.getUniqueId().toString(), karma);
+	public void setPlayerData(Player player, int karma) {
+		this.data.setSpecificPlayerData(player, karma);
 	}
 
-	public PlayerSaveData getData(Player player) {
-		int karma = this.data.get(player.getUniqueId().toString());
-		return new PlayerSaveData(player.getUniqueId().toString(), karma);
+	public PlayerSaveData getPlayerData(Player player) {
+		return this.data.getSpecificPlayerData(player);
+	}
+	
+	public void setAltarData(Altar altar) {
+		this.data.setAltarData(altar);
+	}
+
+	public List<AltarSaveData> getAltarData() {
+		return this.data.getAltarData();
 	}
 
 }

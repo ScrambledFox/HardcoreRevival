@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.jorislodewijks</groupId>
   <artifactId>HardcoreRevival</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.1r</version>
   <description></description>
   
     <build>
@@ -11,7 +11,7 @@
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-compiler-plugin</artifactId>
               <configuration>
-                  <source>1.7</source>
+                  <source>1.8</source>
                   <target>1.7</target>
               </configuration>
           </plugin>
@@ -29,14 +29,14 @@
        <dependency>
            <groupId>org.bukkit</groupId>
            <artifactId>bukkit</artifactId>
-           <version>1.15.2-R0.1-SNAPSHOT</version><!--change this value depending on the version or use LATEST-->
+           <version>LATEST</version><!--change this value depending on the version or use LATEST-->
            <type>jar</type>
            <scope>provided</scope>
        </dependency>
        <dependency>
            <groupId>org.spigotmc</groupId>
            <artifactId>spigot-api</artifactId>
-           <version>1.15.2-R0.1-SNAPSHOT</version><!--change this value depending on the version-->
+           <version>LATEST</version><!--change this value depending on the version-->
            <type>jar</type>
            <scope>provided</scope>
        </dependency>

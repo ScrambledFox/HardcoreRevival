@@ -29,7 +29,7 @@ public class KarmaHandler implements Listener {
 
 	public void setPlayerKarma(Player player, int karma) {
 		player.setMetadata("Karma", new FixedMetadataValue(HardcoreRevival.instance, karma));
-		HardcoreRevival.instance.dataHandler.setData(player, karma);
+		HardcoreRevival.instance.dataHandler.setPlayerData(player, karma);
 	}
 
 	public int getPlayerKarma(Player player) {
@@ -48,13 +48,13 @@ public class KarmaHandler implements Listener {
 	public int modPlayerKarma(Player player, int karma) {
 		int oldKarma = getPlayerKarma(player);
 		setPlayerKarma(player, oldKarma + karma);
-		handleKarmaChange(player, oldKarma, karma);
+		//handleKarmaChange(player, oldKarma, karma);
 		return getPlayerKarma(player);
 	}
 
 	@EventHandler
 	public void PlayerJoinEvent(PlayerJoinEvent event) {
-		setPlayerKarma(event.getPlayer(), HardcoreRevival.instance.dataHandler.getData(event.getPlayer()).karma);
+		setPlayerKarma(event.getPlayer(), HardcoreRevival.instance.dataHandler.getPlayerData(event.getPlayer()).karma);
 	}
 
 	@EventHandler
