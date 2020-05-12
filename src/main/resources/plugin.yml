@@ -1,6 +1,6 @@
 name: HardcoreRevival
 main: com.jorislodewijks.hardcorerevival.HardcoreRevival
-version: 0.1.1r
+version: 0.1.2
 api-version: 1.13
 author: Joris Lodewijks
 
@@ -26,8 +26,30 @@ commands:
     permission: hardcorerevival.op
     permission-message: You must be opped to run this command.
 
-  getritualbook:
-    description: Drop a ritual instruction book on the players location.
-    usage: "/getritualbook [type]"
+  listaltars:
+    description: List all current altars.
+    usage: "/listaltars"
+    permission: hardcorerevival.op
+    permission-message: You must be opped to run this command.
+
+  listrituals:
+    description: List all rituals.
+    usage: "/listrituals"
+    permission: hardcorerevival.op
+    permission-message: You must be opped to run this command.
+
+  listsourcebooks:
+    description: List all generated ritual books.
+    usage: "/listritualbooks"
+    permission: hardcorerevival.op
+    permission-message: You must be opped to run this command.
+  givesourcebook:
+    description: Drop a ritual source book on the players location.
+    usage: "/givesourcebook [index]"
+    permission: hardcorerevival.op
+    permission-message: You must be opped to run this command.
+  gensourcebook:
+    description: Generate a ritual source book for testing purposes.
+    usage: "/gensourcebook"
     permission: hardcorerevival.op
     permission-message: You must be opped to run this command.

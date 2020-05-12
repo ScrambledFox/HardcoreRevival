@@ -12,9 +12,6 @@ import com.jorislodewijks.hardcorerevival.altar.AltarSaveData;
 
 public class SaveData implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 2024619285683593275L;
 	private HashMap<String, PlayerSaveData> playerData;
 	private List<AltarSaveData> altarData;

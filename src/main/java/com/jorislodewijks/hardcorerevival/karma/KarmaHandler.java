@@ -1,9 +1,5 @@
 package com.jorislodewijks.hardcorerevival.karma;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.NPC;
@@ -16,13 +12,12 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 
 import com.jorislodewijks.hardcorerevival.HardcoreRevival;
-
-import net.md_5.bungee.api.ChatColor;
+import com.jorislodewijks.hardcorerevival.PlayerSaveData;
 
 public class KarmaHandler implements Listener {
 
-	private static List<KarmaEvent> karmaEvents = new ArrayList<>(Arrays.asList(
-			new KarmaEvent(-100, "You are a bad human, buy you kinda like it...", -1), new KarmaEvent(100, "You are a good human.", -1)));
+//	private static List<KarmaEvent> karmaEvents = new ArrayList<>(Arrays.asList(
+//			new KarmaEvent(-100, "You are a bad human, buy you kinda like it...", -1), new KarmaEvent(100, "You are a good human.", -1)));
 
 	public KarmaHandler() {
 	}
@@ -53,8 +48,12 @@ public class KarmaHandler implements Listener {
 	}
 
 	@EventHandler
-	public void PlayerJoinEvent(PlayerJoinEvent event) {
-		setPlayerKarma(event.getPlayer(), HardcoreRevival.instance.dataHandler.getPlayerData(event.getPlayer()).karma);
+	public void OnPlayerJoinEvent(PlayerJoinEvent event) {
+		PlayerSaveData playerData = HardcoreRevival.instance.dataHandler.getPlayerData(event.getPlayer());
+		if (playerData != null)
+			setPlayerKarma(event.getPlayer(), playerData.karma);
+		else
+			setPlayerKarma(event.getPlayer(), 0);
 	}
 
 	@EventHandler
@@ -70,18 +69,18 @@ public class KarmaHandler implements Listener {
 		}
 	}
 
-	private void handleKarmaChange(Player player, int oldKarma, int karmaChange) {
-		if (Math.signum(karmaChange) > 0.0) {
-			for(KarmaEvent karmaEvent : karmaEvents) {
-				if(oldKarma < karmaEvent.threshold && oldKarma + karmaChange >= karmaEvent.threshold) {
-					player.sendMessage(ChatColor.GREEN + karmaEvent.message);
-				} else if (oldKarma > karmaEvent.threshold && oldKarma - karmaChange <= karmaEvent.threshold) {
-					player.sendMessage(ChatColor.RED + karmaEvent.message);
-				}
-			}
-		} else {
-
-		}
-	}
+//	private void handleKarmaChange(Player player, int oldKarma, int karmaChange) {
+//		if (Math.signum(karmaChange) > 0.0) {
+//			for(KarmaEvent karmaEvent : karmaEvents) {
+//				if(oldKarma < karmaEvent.threshold && oldKarma + karmaChange >= karmaEvent.threshold) {
+//					player.sendMessage(ChatColor.GREEN + karmaEvent.message);
+//				} else if (oldKarma > karmaEvent.threshold && oldKarma - karmaChange <= karmaEvent.threshold) {
+//					player.sendMessage(ChatColor.RED + karmaEvent.message);
+//				}
+//			}
+//		} else {
+//
+//		}
+//	}
 
 }

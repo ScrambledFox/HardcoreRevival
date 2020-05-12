@@ -1,9 +1,6 @@
 package com.jorislodewijks.hardcorerevival.altar;
 
 import java.io.Serializable;
-import java.util.UUID;
-
-import org.bukkit.Location;
 
 public class AltarSaveData implements Serializable {
 

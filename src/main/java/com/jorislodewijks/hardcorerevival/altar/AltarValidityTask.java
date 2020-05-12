@@ -2,8 +2,6 @@ package com.jorislodewijks.hardcorerevival.altar;
 
 import org.bukkit.scheduler.BukkitRunnable;
 
-import com.jorislodewijks.hardcorerevival.HardcoreRevival;
-
 public class AltarValidityTask extends BukkitRunnable {
 	private Altar altar;
 

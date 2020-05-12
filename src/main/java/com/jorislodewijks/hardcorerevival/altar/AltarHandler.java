@@ -22,7 +22,9 @@ public class AltarHandler implements Listener {
 	public static List<Altar> altars;
 
 	public AltarHandler() {
-		altars = new ArrayList<Altar>();
+		if (altars == null) {
+			altars = new ArrayList<Altar>();
+		}
 	}
 
 	@EventHandler
@@ -90,6 +92,10 @@ public class AltarHandler implements Listener {
 			altar.getImportantBlock().getWorld().playSound(altar.getImportantBlock().getLocation(),
 					Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 2.0f);
 			break;
+		case ANY:
+			break;
+		default:
+			break;
 		}
 
 		HardcoreRevival.instance.dataHandler.setAltarData(event.getAltar());
@@ -103,6 +109,10 @@ public class AltarHandler implements Listener {
 			break;
 		case RELIGIOUS:
 			event.getLocation().getWorld().playSound(event.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 1.0f);
+			break;
+		case ANY:
+			break;
+		default:
 			break;
 		}
 	}
@@ -127,6 +137,10 @@ public class AltarHandler implements Listener {
 		}
 	}
 
+	public static boolean hasAltars() {
+		return !altars.isEmpty();
+	}
+	
 	public static Altar getAltarFromBlock(Block block) {
 		for (Altar altar : altars) {
 			if (altar.getBlocks().contains(block)) {
@@ -162,6 +176,10 @@ public class AltarHandler implements Listener {
 		case RELIGIOUS:
 			if (creator != null)
 				new KarmaHandler().modPlayerKarma(creator, 50);
+			break;
+		case ANY:
+			break;
+		default:
 			break;
 		}
 

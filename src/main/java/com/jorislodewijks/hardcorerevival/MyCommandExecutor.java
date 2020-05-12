@@ -1,5 +1,7 @@
 package com.jorislodewijks.hardcorerevival;
 
+import java.text.DecimalFormat;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -11,10 +13,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
-import com.jorislodewijks.hardcorerevival.books.CultBookHandler;
-import com.jorislodewijks.hardcorerevival.books.ReligiousBookHandler;
+import com.jorislodewijks.hardcorerevival.altar.Altar;
+import com.jorislodewijks.hardcorerevival.altar.AltarHandler;
 import com.jorislodewijks.hardcorerevival.karma.KarmaHandler;
-import com.jorislodewijks.hardcorerevival.ritual.Ritual.RitualSource;
+import com.jorislodewijks.hardcorerevival.ritual.RitualHandler;
+import com.jorislodewijks.hardcorerevival.ritual.source.SourceBook;
+import com.jorislodewijks.hardcorerevival.ritual.source.SourceHandler;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -104,7 +108,7 @@ public class MyCommandExecutor implements CommandExecutor {
 				}
 			}
 
-			new RevivalHandler().revivePlayer(player, location, resurrectionType);
+			RevivalHandler.revivePlayer(player, location, resurrectionType);
 			return true;
 		}
 
@@ -162,53 +166,86 @@ public class MyCommandExecutor implements CommandExecutor {
 
 			}
 
-			new RevivalHandler().reviveNearestDeadPlayer(searchLocation, revivalLocation, resurrectionType);
+			RevivalHandler.reviveNearestDeadPlayer(searchLocation, revivalLocation, resurrectionType);
 			return true;
 		}
 
-		if (cmd.getName().equalsIgnoreCase("getritualbook")) {
+		if (cmd.getName().equalsIgnoreCase("listaltars")) {
+			sender.sendMessage(ChatColor.DARK_PURPLE + "All current altars:");
+			if (!AltarHandler.hasAltars()) {
+				sender.sendMessage(ChatColor.RED + "NONE");
+			} else {
+				for (Altar altar : AltarHandler.getAllAltars()) {
+					String message = altar.getAltarType().toString();
+					message += ": " + altar.getImportantBlock().getLocation().toVector().toString();
+
+					if (sender instanceof Player) {
+						DecimalFormat df = new DecimalFormat("0.00");
+						message += ": " + df.format(
+								((Player) sender).getLocation().distance(altar.getImportantBlock().getLocation()))
+								+ "m";
+					}
+
+					sender.sendMessage(ChatColor.LIGHT_PURPLE + message);
+				}
+			}
+			return true;
+		}
+
+		if (cmd.getName().equalsIgnoreCase("listrituals")) {
+			sender.sendMessage(ChatColor.DARK_PURPLE + "All current configured rituals:");
+			if (!RitualHandler.hasRituals())
+				sender.sendMessage(ChatColor.RED + "NONE");
+
+			RitualHandler.getRituals().forEach(r -> sender.sendMessage(ChatColor.LIGHT_PURPLE + r.getName()));
+			return true;
+		}
+
+		if (cmd.getName().equalsIgnoreCase("listsourcebooks")) {
+			sender.sendMessage(ChatColor.DARK_PURPLE + "All generated source books:");
+			if (!SourceHandler.hasSourceFiles()) {
+				sender.sendMessage(ChatColor.RED + "NONE");
+			} else {
+				int i = 0;
+				for (SourceBook book : SourceHandler.getAllSourceBooks()) {
+					String message = "[" + ++i + "] " + book.getTitle();
+					message += " by " + book.getAuthor();
+					sender.sendMessage(ChatColor.LIGHT_PURPLE + ChatColor.stripColor(message));
+				}
+			}
+			return true;
+		}
+
+		if (cmd.getName().equalsIgnoreCase("givesourcebook")) {
 			if (sender instanceof Player) {
-				ResurrectionType bookType = ResurrectionType.RELIGIOUS;
-				RitualSource ritualSource = RitualSource.INSTRUCTION_BOOK;
 				if (args.length > 0) {
 					try {
-						bookType = ResurrectionType.valueOf(args[0]);
+						int index = Integer.parseInt(args[0]) - 1;
+						ItemStack book = SourceHandler.getAllSourceBooks().get(index).toItemStack();
+						Item drop = ((Player) sender).getWorld().dropItem(((Player) sender).getEyeLocation(), book);
+						drop.setPickupDelay(0);
+						return true;
 					} catch (Exception e) {
-						sender.sendMessage(ChatColor.RED + args[0] + " is not a valid type.");
-						return false;
+						sender.sendMessage(ChatColor.RED + "Couldn't get the selected source book!");
 					}
-
-					if (args.length > 1) {
-						try {
-							ritualSource = RitualSource.valueOf(args[1]);
-						} catch (Exception e) {
-							sender.sendMessage(ChatColor.RED + args[1] + " is not a valid source.");
-							return false;
-						}
-					}
-				}
-
-				ItemStack item = null;
-				switch (bookType) {
-				case CULT:
-					item = new CultBookHandler().getInstructionBook(ritualSource);
-					break;
-				case RELIGIOUS:
-					item = new ReligiousBookHandler().getInstructionBook(ritualSource);
-					break;
-				}
-
-				if (item != null) {
-					Item drop = ((Player) sender).getWorld().dropItem(((Player) sender).getLocation(), item);
-					drop.setPickupDelay(0);
-					return true;
 				} else {
-					sender.sendMessage(ChatColor.RED + "Couldn't find book type: " + bookType);
+					sender.sendMessage(ChatColor.RED + "You must choose the index of which source book you want!");
 				}
+
 			} else {
 				sender.sendMessage(ChatColor.RED + "You must be a player to run this command!");
 			}
 
+		}
+
+		if (cmd.getName().equalsIgnoreCase("gensourcebook")) {
+			if (sender instanceof Player) {
+				ItemStack book = SourceHandler.getSourceBookItem(ResurrectionType.RELIGIOUS,
+						"CULT_BASIC_INSTRUCTION_BOOK");
+				Item drop = ((Player) sender).getWorld().dropItem(((Player) sender).getEyeLocation(), book);
+				drop.setPickupDelay(0);
+				return true;
+			}
 		}
 
 		return false;

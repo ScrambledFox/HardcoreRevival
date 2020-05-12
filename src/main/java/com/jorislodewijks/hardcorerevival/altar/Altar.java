@@ -2,25 +2,33 @@ package com.jorislodewijks.hardcorerevival.altar;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.block.data.Lightable;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
 
 import com.jorislodewijks.hardcorerevival.HardcoreRevival;
 import com.jorislodewijks.hardcorerevival.HardcoreRevival.ResurrectionType;
+import com.jorislodewijks.hardcorerevival.players.PlayerHandler;
 import com.jorislodewijks.hardcorerevival.ritual.Ritual;
 import com.jorislodewijks.hardcorerevival.ritual.RitualDetectionTask;
 import com.jorislodewijks.hardcorerevival.ritual.RitualRunnerTask;
@@ -139,6 +147,9 @@ public class Altar {
 			}
 			break;
 		case RELIGIOUS:
+			if (ThreadLocalRandom.current().nextInt(0, 100) < 50) {
+				this.deactivePowerSource();
+			}
 			break;
 		default:
 			break;
@@ -158,34 +169,149 @@ public class Altar {
 			}
 			break;
 		case RELIGIOUS:
+			int times = ThreadLocalRandom.current().nextInt(1, 8 + 1);
+			for (int i = 0; i < times; i++) {
+				int x = 0, z = 0;
+				while (x == 0 && z == 0) {
+					x = ThreadLocalRandom.current().nextInt(-1, 1 + 1);
+					z = ThreadLocalRandom.current().nextInt(-1, 1 + 1);
+				}
+
+				Block block = this.getImportantBlock().getRelative(x, 0, z);
+
+				block.setType(Material.OBSIDIAN);
+				block.getWorld().playSound(block.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
+				block.getWorld().spawnParticle(Particle.BLOCK_CRACK, block.getLocation(), 50,
+						Material.OBSIDIAN.createBlockData());
+
+			}
 			break;
 		default:
 			break;
 		}
 	}
 
-	public List<ItemStack> getAltarInventory() {
-		List<ItemStack> items = new ArrayList<ItemStack>();
-		for (Entity e : this.getAlterItemEntities()) {
-			items.add(((Item) e).getItemStack());
+	public List<Player> getPlayers() {
+		List<Player> players = new ArrayList<Player>();
+		for (Entity e : this.getMobEntities()) {
+			if (e instanceof Player) {
+				players.add((Player) e);
+			}
+		}
+
+		return players;
+	}
+
+	public Player getNearestPlayer(GameMode gameMode) {
+		List<Player> players = this.getPlayers();
+		return PlayerHandler.getNearestPlayer(players, gameMode, this.getImportantBlock().getLocation());
+	}
+
+	public List<Entity> getMobEntitiesWithTypes(List<EntityType> entityTypes) {
+		if (entityTypes == null)
+			return null;
+
+		List<Entity> entities = new ArrayList<Entity>();
+
+		List<Entity> entitiesAtAltar = this.getMobEntities();
+		List<EntityType> entityTypesAtAltar = this.getMobEntityTypes();
+
+		for (EntityType type : entityTypes) {
+			if (entityTypesAtAltar.contains(type)) {
+				int index = entityTypesAtAltar.indexOf(type);
+				entities.add(entitiesAtAltar.get(index));
+
+				entitiesAtAltar.remove(index);
+				entityTypesAtAltar.remove(index);
+			}
+		}
+
+		return entities;
+	}
+
+	public List<Entity> getMobEntitiesWithType(EntityType type) {
+		List<Entity> entities = new ArrayList<Entity>();
+		List<Entity> entitiesAtAltar = this.getMobEntities();
+
+		entitiesAtAltar.forEach((e) -> {
+			if (e.getType() == type)
+				entities.add(e);
+		});
+
+		return entities;
+	}
+
+	public Entity getFirstMobEntityWithType(EntityType type) {
+		List<Entity> entitiesAtAltar = this.getMobEntities();
+		List<EntityType> entityTypesAtAltar = this.getMobEntityTypes();
+
+		if (entityTypesAtAltar.contains(type))
+			return entitiesAtAltar.get(entityTypesAtAltar.indexOf(type));
+		else
+			return null;
+	}
+
+	public List<EntityType> getMobEntityTypes() {
+		List<EntityType> entityTypes = new ArrayList<EntityType>();
+		this.getMobEntities().forEach((e) -> entityTypes.add(e.getType()));
+		return entityTypes;
+	}
+
+	public List<Entity> getMobEntities() {
+		List<Entity> entities = new ArrayList<Entity>();
+		for (Entity e : this.getEntities(5f)) {
+			if (e instanceof Mob || e instanceof Player) {
+				entities.add(e);
+			}
+		}
+		return entities;
+	}
+	
+	public Location getItemDropLocation() {
+		switch(this.altarType) {
+		case CULT:
+			return this.getImportantBlock().getLocation().add(0.5, 0.5, 0.5);
+			
+		case ANY:
+		case RELIGIOUS:
+		default:
+			return this.getImportantBlock().getLocation().add(0.5, 1.5, 0.5);
+		
+		}
+	}
+
+	public HashMap<Material, Integer> getInventory() {
+		HashMap<Material, Integer> items = new HashMap<Material, Integer>();
+		for (Entity e : this.getEntities(0.5f)) {
+			if (e instanceof Item) {
+				if (items.containsKey(((Item) e).getItemStack().getType())) {
+					items.put(((Item) e).getItemStack().getType(),
+							items.get(((Item) e).getItemStack().getType()) + ((Item) e).getItemStack().getAmount());
+				} else {
+					items.put(((Item) e).getItemStack().getType(), ((Item) e).getItemStack().getAmount());
+				}
+			}
 		}
 		return items;
 	}
 
-	public List<Entity> getAlterItemEntities() {
+	public List<Entity> getInventoryAsEntities() {
 		List<Entity> items = new ArrayList<Entity>();
-		Location itemsLocation = this.getInventoryLocation();
-
-		for (Entity entity : this.getImportantBlock().getWorld()
-				.getNearbyEntities(new BoundingBox(itemsLocation.getX() - 0.5, itemsLocation.getY() - 0.5,
-						itemsLocation.getZ() - 0.5, itemsLocation.getX() + 0.5, itemsLocation.getY() + 0.5,
-						itemsLocation.getZ() + 0.5))) {
-			if (entity instanceof Item) {
-				items.add(entity);
+		for (Entity e : this.getEntities(0.5f)) {
+			if (e instanceof Item) {
+				items.add(e);
 			}
 		}
-
 		return items;
+	}
+
+	private Collection<Entity> getEntities(float range) {
+		Location itemsLocation = this.getInventoryLocation();
+
+		return this.getImportantBlock().getWorld()
+				.getNearbyEntities(new BoundingBox(itemsLocation.getX() - range, itemsLocation.getY() - range,
+						itemsLocation.getZ() - range, itemsLocation.getX() + range, itemsLocation.getY() + range,
+						itemsLocation.getZ() + range));
 	}
 
 	private Location getInventoryLocation() {
@@ -250,9 +376,19 @@ public class Altar {
 			} else if (block.getRelative(BlockFace.WEST, 2).getType() == Material.ENCHANTING_TABLE
 					|| block.getRelative(BlockFace.WEST, 2).getType() == Material.LECTERN) {
 				block = block.getRelative(BlockFace.WEST, 2);
+			} else {
+				return null;
 			}
-			
+
 			return Altar.getReligiousAltarBlocks(block);
+		} else if (block.getType() == Material.WHITE_STAINED_GLASS) {
+			for (int x = -1; x <= 1; x++) {
+				for (int z = -1; z <= 1; z++) {
+					if (block.getRelative(x, 0, z).getType() == Material.EMERALD_BLOCK) {
+						return Altar.getReligiousAltarBlocks(block.getRelative(x, 0, z));
+					}
+				}
+			}
 		}
 
 		return blocks;
@@ -260,6 +396,10 @@ public class Altar {
 
 	public static boolean checkBlocksForCultAltarValidity(List<Block> blocks) {
 		boolean hasCauldron = false;
+
+		if (blocks == null)
+			return false;
+
 		for (Block block : blocks) {
 			if (block.getType() == Material.CAULDRON) {
 				hasCauldron = true;
@@ -296,6 +436,9 @@ public class Altar {
 	public static boolean checkBlocksForReligiousAltarValidity(List<Block> blocks) {
 		Block middleBlock = null;
 		Block table = null;
+
+		if (blocks == null)
+			return false;
 
 		for (Block block : blocks) {
 			if (block.getType() == Material.EMERALD_BLOCK)
